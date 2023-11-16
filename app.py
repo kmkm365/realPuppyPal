@@ -7,7 +7,6 @@ from PIL import Image
 import io
 import cv2
 import tempfile
-import requests
 
 # 환경 변수 로드
 load_dotenv()
