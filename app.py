@@ -7,12 +7,21 @@ from PIL import Image
 import io
 import cv2
 import tempfile
+import toml
 
+config = toml.load("파일경로/config.toml")
 # 환경 변수 로드
 load_dotenv()
 
 # OpenAI API 키 설정
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai_api_key = os.getenv("OPENAI_API_KEY")
+
+if openai_api_key is None:
+    # 환경 변수가 없으면 TOML 파일에서 불러오기
+    config = toml.load("파일경로/config.toml")
+    openai_api_key = config["openai"]["api_key"]
+
+openai.api_key = openai_api_key
 
 #def encode_image(image):
 #    buffer = BytesIO()
