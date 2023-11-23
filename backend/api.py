@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 import openai
 import os
@@ -10,7 +10,8 @@ import cv2
 import tempfile
 
 app = Flask(__name__)
-CORS(app)  # CORS를 활성화하여 React 앱에서 요청을 허용합니다.
+CORS(app)
+  # CORS를 활성화하여 React 앱에서 요청을 허용합니다.
 
 # 환경 변수 로드
 load_dotenv()
@@ -36,8 +37,10 @@ def get_first_frame(video_bytes):
     if success:
         return Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
     return None
-
-@app.route('/api/upload_video', methods=['POST'])
+@app.route('/')
+def hello_world():
+    return 'Hello, World!'
+@app.route('/api/upload', methods=['POST'])
 def analyze_image():
     if 'file' not in request.files:
         return jsonify(error="missing file"), 400
@@ -57,21 +60,23 @@ def analyze_image():
     else:
         return jsonify(error="invalid file type"), 400
 
-    system_prompt = "You are an expert at analyzing images."
+    system_prompt = "너는 강아지를 돌보는 훈련사야."
     response = openai.ChatCompletion.create(
         model="gpt-4-vision-preview",
         messages=[
             {
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": "What’s in this image?"},
+                    {"type": "text", "text": "그림 속 강아지의 행동에 맞게 대화해주세요"},
                     {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded_image}"}}
                 ],
             },
         ],
         max_tokens=30,
     )
-    return jsonify(result=response.choices[0].message.content)
+    flask_response = make_response(jsonify(result=response.choices[0].message.content))
+    flask_response.headers["Access-Control-Allow-Origin"] = "*"
+    return flask_response
 
 if __name__ == '__main__':
     app.run(debug=True)

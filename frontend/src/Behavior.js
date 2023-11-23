@@ -24,7 +24,7 @@ const Behavior = () => {
         formData.append('file', file); // FormData 객체에 파일을 추가합니다.
 
         try {
-            const response = await fetch('/api/upload_video', {
+            const response = await fetch('/api/upload', {
                 method: 'POST',
                 body: formData,
             });
