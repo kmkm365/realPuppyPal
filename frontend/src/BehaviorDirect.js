@@ -17,18 +17,41 @@ const BehaviorDirect = () => {
     const uploadVideoToServer = async (file) => {
         const formData = new FormData();
         formData.append('file', file); // FormData 객체에 파일을 추가합니다.
-
-        try {
+    
+        // 로컬 서버로의 요청을 시도하는 함수
+        const tryUploadToLocalServer = async () => {
             const response = await fetch('/api/upload', {
                 method: 'POST',
                 mode: 'cors',
                 body: formData,
             });
-
+            return response;
+        };
+    
+        // Cloud 서버로의 요청을 시도하는 함수
+        const tryUploadToCloudServer = async () => {
+            const response = await fetch('/cloudapi/upload', {
+                method: 'POST',
+                mode: 'cors',
+                body: formData,
+            });
+            return response;
+        };
+    
+        try {
+            let response = await tryUploadToLocalServer();
+            
+            // 로컬 서버 요청이 실패하면 Cloud 서버로 재시도
+            if (!response.ok) {
+                console.error('Upload to local server failed, trying cloud server');
+                response = await tryUploadToCloudServer();
+            }
+    
+            // Cloud 서버 요청도 실패하면 에러 처리
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
+    
             const data = await response.json();
             console.log('Upload successful:', data);
             navigate('/Result', { state: { result: data } }); // 결과 페이지로 이동합니다.
@@ -37,6 +60,7 @@ const BehaviorDirect = () => {
             alert("업로드 실패");
         }
     };
+    
 
     // 업로드를 확인하는 버튼을 클릭했을 때 실행될 함수입니다.
     const handleConfirmUpload = () => {

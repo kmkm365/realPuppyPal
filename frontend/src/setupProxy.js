@@ -1,11 +1,22 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 module.exports = function(app) {
+  // 로컬 서버로의 요청을 프록시합니다.
   app.use(
-    '/api', // 이 경로를 통해 오는 요청은 프록시를 사용합니다.
+    '/api',
     createProxyMiddleware({
-      target: 'http://127.0.0.1:5000/', // Flask 서버 주소
+      target: 'http://127.0.0.1:5000',
       changeOrigin: true
+    })
+  );
+
+  // Cloudtype 서버로의 요청을 프록시합니다.
+  app.use(
+    '/cloudapi',
+    createProxyMiddleware({
+      target: 'https://port-0-realpuppypalapi-3szcb0g2blpawubnm.sel5.cloudtype.app',
+      changeOrigin: true,
+      pathRewrite: { '^/cloudapi': '/api' }, // '/cloudapi' 경로를 제거합니다.
     })
   );
 };
