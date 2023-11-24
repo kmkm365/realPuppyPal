@@ -19,10 +19,12 @@ const Result = () => {
             {dog ? (
                 <div>
                     <h3>강아지 정보</h3>
-                    <p>이름: {dog.dog.name}</p>
-                    <p>나이: {dog.dog.age}</p>
-                    <p>성별: {dog.dog.gender}</p>
-                    <p>품종: {dog.dog.breed}</p>
+                    <p>이름: {dog.name}</p>
+                    <p>나이: {dog.age}</p>
+                    <p>성별: {dog.gender}</p>
+                    <p>품종: {dog.breed}</p>
+                    <h3>분석 결과</h3>
+                    <p>{resultText}</p>
                 </div>
             ) : resultText ? (
                 <div>

@@ -58,7 +58,7 @@ const Behavior = () => {
     
             const data = await response.json();
             console.log('Upload successful:', data);
-            navigate('/Result', { state: { result: data } }); // 결과 페이지로 이동합니다.
+            navigate('/Result', { state: { result: data, dog: dog } }); // 결과 페이지로 이동합니다.
         } catch (error) {
             console.error('Upload failed:', error);
             alert("업로드 실패");
