@@ -8,15 +8,12 @@ import io
 import base64
 import cv2
 import tempfile
+import numpy as np
 
 app = Flask(__name__)
 CORS(app)
-  # CORS를 활성화하여 React 앱에서 요청을 허용합니다.
 
-# 환경 변수 로드
 load_dotenv()
-
-# OpenAI API 키 설정
 openai_api_key = os.getenv("OPENAI_API_KEY") or 'your-openai-api-key'
 openai.api_key = openai_api_key
 
@@ -27,52 +24,56 @@ def encode_image_to_base64(image):
     img_base64 = base64.b64encode(img_byte).decode()
     return img_base64
 
-def get_first_frame(video_bytes):
+def extract_frames(video_bytes, every_n_frame=30):
     with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tmpfile:
         tmpfile.write(video_bytes)
         video_path = tmpfile.name
 
     video = cv2.VideoCapture(video_path)
-    success, frame = video.read()
-    if success:
-        return Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-    return None
-@app.route('/')
-def hello_world():
-    return 'Hello, World!'
+    frames = []
+    frame_count = 0
+    while True:
+        success, frame = video.read()
+        if not success:
+            break
+        if frame_count % every_n_frame == 0:
+            frames.append(Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)))
+        frame_count += 1
+    return frames
+
 @app.route('/api/upload', methods=['POST'])
-def analyze_image():
-    if 'file' not in request.files:
-        return jsonify(error="missing file"), 400
-
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify(error="no file selected"), 400
-
-    if file and file.content_type.startswith('image/'):
-        image = Image.open(file.stream)
-        encoded_image = encode_image_to_base64(image)
-    elif file and file.content_type.startswith('video/'):
-        image = get_first_frame(file.read())
-        if image is None:
-            return jsonify(error="could not extract the first frame from the video"), 400
-        encoded_image = encode_image_to_base64(image)
-    else:
+def analyze_video():
+    file = request.files.get('file')
+    if not file or not file.content_type.startswith('video/'):
         return jsonify(error="invalid file type"), 400
 
-    system_prompt = "너는 강아지를 돌보는 훈련사야."
+    frames = extract_frames(file.read())
+    if not frames:
+        return jsonify(error="no frames extracted"), 400
+
+    encoded_images = [encode_image_to_base64(frame) for frame in frames]
+
+    system_prompt = "As a dog trainer, you specialize in understanding canine behavior and emotions."
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Don't mention your limitations, just answer the question to the best of your ability right away. \
+                 Don't say, 'And in the first image, it looks like...' Just answer as if it's a situation. \
+                 Here are several images extracted from a video of a dog. Please analyze them as a continuous sequence, not as separate moments. \
+                 Describe the dog's behavior and emotional state throughout these frames, focusing on the changes and progression in its body language, facial expressions, and emotions. \
+                 Consider these images as telling a story and provide a cohesive narrative of what you think is happening to the dog over time."}
+            ],
+        }
+    ]
+
+    for encoded_image in encoded_images:
+        messages[0]["content"].append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded_image}"}})
+
     response = openai.ChatCompletion.create(
         model="gpt-4-vision-preview",
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": "그림 속 강아지의 행동에 맞게 대화해주세요"},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded_image}"}}
-                ],
-            },
-        ],
-        max_tokens=30,
+        messages=messages,
+        max_tokens=200,
     )
     flask_response = make_response(jsonify(result=response.choices[0].message.content))
     flask_response.headers["Access-Control-Allow-Origin"] = "*"
