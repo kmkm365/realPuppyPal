@@ -13,3 +13,48 @@ header {
     background-color: #FCF2DC;
     padding: 0;
 }
+
+.result-box {
+    margin-top: 80px;
+}
+
+.dogInfo {
+
+    border: 1px solid #fff;
+    /* White border */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    /* Shadow effect */
+    padding: 5px;
+    /* Padding inside the Polaroid */
+    background-color: #fff;
+    /* White background */
+    display: inline-block;
+    /* Display as inline block to wrap around content */
+}
+
+.dogInfo-details {
+    text-align: left;
+}
+
+.dogInfo-details p {
+    margin: 0;
+    padding: 3px;
+}
+
+.dogInfo video {
+    max-width: 100%;
+    /* Make the video responsive within its container */
+    border: 1px solid #ccc;
+    /* Border for the video within the Polaroid */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /* Shadow effect for the video */
+    margin-bottom: 10px;
+    /* Spacing between video and other content */
+}
+
+.stateInfo {}
+
+.stateInfo img {
+    margin: 0;
+    width: 200px;
+}

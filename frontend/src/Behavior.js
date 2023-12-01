@@ -14,14 +14,14 @@ const Behavior = () => {
     // 비디오 파일을 선택할 때 실행될 함수입니다.
     const handleVideoUpload = (event) => {
         setSelectedVideo(event.target.files[0]); // 선택된 파일을 상태에 저장합니다.
-        setShowConfirmationModal(true); // 확인 모달을 표시합니다.
+
     };
 
     // 비디오 파일을 서버로 업로드하는 함수입니다.
     const uploadVideoToServer = async (file) => {
         const formData = new FormData();
         formData.append('file', file); // FormData 객체에 파일을 추가합니다.
-    
+
         // 로컬 서버로의 요청을 시도하는 함수
         const tryUploadToLocalServer = async () => {
             const response = await fetch('/api/upload', {
@@ -31,7 +31,7 @@ const Behavior = () => {
             });
             return response;
         };
-    
+
         // Cloud 서버로의 요청을 시도하는 함수
         const tryUploadToCloudServer = async () => {
             const response = await fetch('/cloudapi/upload', {
@@ -41,39 +41,41 @@ const Behavior = () => {
             });
             return response;
         };
-    
+
         try {
+            setUploading(true);
             let response = await tryUploadToLocalServer();
-            
+
             // 로컬 서버 요청이 실패하면 Cloud 서버로 재시도
             if (!response.ok) {
                 console.error('Upload to local server failed, trying cloud server');
                 response = await tryUploadToCloudServer();
             }
-    
+
             // Cloud 서버 요청도 실패하면 에러 처리
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-    
+
             const data = await response.json();
             console.log('Upload successful:', data);
-            navigate('/Result', { state: { result: data, dog: dog } }); // 결과 페이지로 이동합니다.
+            navigate('/Result', { state: { result: data, dog: dog, selectedVideo: selectedVideo } }); // 결과 페이지로 이동합니다.
         } catch (error) {
             console.error('Upload failed:', error);
             alert("업로드 실패");
+        } finally {
+            setUploading(false);
+            setShowConfirmationModal(false);
+            setSelectedVideo(null);
         }
     };
 
     // 업로드를 확인하는 버튼을 클릭했을 때 실행될 함수입니다.
     const handleConfirmUpload = () => {
         if (selectedVideo) {
-            uploadVideoToServer(selectedVideo);
+            setShowConfirmationModal(true);
         }
-        setShowConfirmationModal(false); // 모달을 닫습니다.
-        setSelectedVideo(null); // 선택된 비디오를 초기화합니다.
     };
-
     // 업로드 모달을 닫을 때 실행될 함수입니다.
     const closeConfirmationModal = () => {
         setShowConfirmationModal(false); // 모달을 닫습니다.
@@ -94,7 +96,7 @@ const Behavior = () => {
                         <video controls width="280">
                             <source src={URL.createObjectURL(selectedVideo)} type="video/mp4" />
                         </video>
-                        <button className="uploadbtn" onClick={() => setShowConfirmationModal(true)}>Upload</button>
+                        <button className="uploadbtn" onClick={handleConfirmUpload}>Upload</button>
                     </div>
                 )}
             </div>
@@ -105,14 +107,30 @@ const Behavior = () => {
                         <p className="first-element"><b>Confirm Upload</b></p>
                         <p className="first-element">Do you want to upload the selected video?</p>
                         <div className='confirmBtn'>
-                            <button className="second-element" onClick={handleConfirmUpload}>Yes</button>
-                            <button className="third-element" onClick={closeConfirmationModal}>Cancel</button>
+                            {uploading ? (
+                                <div>
+                                    <p className='loading'>loading..</p>
+                                    <div className="loading-spinner"></div>
+                                </div>
+
+
+                            ) : (
+
+                                <>
+                                    <button className="second-element" onClick={() => uploadVideoToServer(selectedVideo)}>
+                                        Yes
+                                    </button>
+                                    <button className="third-element" onClick={() => closeConfirmationModal()}>
+                                        Cancel
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
             )}
 
-            {uploading && <div>Uploading...</div>}
+
         </div>
     );
 };

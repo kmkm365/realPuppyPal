@@ -8,35 +8,41 @@ const Result = () => {
     const dog = location.state?.dog;
     const resultObj = location.state?.result; // 서버로부터 받은 결과 객체
     const resultText = resultObj ? resultObj.result : null; // 결과 객체에서 텍스트 추출
-
+    const selectedVideo = location.state?.selectedVideo;
     const handletitleClick = () => {
         navigate('/Home');
     }
 
+    const resultdata = '<분석 결과>';
     return (
         <div>
-            <header> <img onClick={handletitleClick} alt="dog" src="img/header.png" /></header>
-            {dog ? (
-                <div>
-                    <h3>강아지 정보</h3>
-                    <p>이름: {dog.name}</p>
-                    <p>나이: {dog.age}</p>
-                    <p>성별: {dog.gender}</p>
-                    <p>품종: {dog.breed}</p>
-                    <h3>분석 결과</h3>
+            <header onClick={handletitleClick} > <img alt="dog" src="img/header.png" /></header>
+
+            <div className='result-box'>
+                <div className='dogInfo'>
+                    <video controls width="280">
+                        <source src={URL.createObjectURL(selectedVideo)} type="video/mp4" />
+                    </video>
+                    {dog ? (<div className='dogInfo-details'>
+                        <p>이름 : {dog.name}</p>
+                        <p>나이 : {dog.age}</p>
+                        <p>성별 : {dog.gender}</p>
+                        <p>품종 : {dog.breed}</p>
+                    </div>) : (<></>)}
+
+                </div>
+                <div className='stateInfo'>
+                    <h3>{resultdata}</h3>
+                    <img src="img/sleep.png"></img>
+                    {dog ? (<p>
+                        상태: {dog.name}(이)는 지금 졸려요..
+                    </p>) : (<p>
+                        상태: 졸려요..
+                    </p>)}
                     <p>{resultText}</p>
                 </div>
-            ) : resultText ? (
-                <div>
-                    <h3>분석 결과</h3>
-                    <p>{resultText}</p>
-                </div>
-            ) : (
-                <div>
-                    <h3>결과 없음</h3>
-                    <p>업로드한 파일의 분석 결과가 없습니다.</p>
-                </div>
-            )}
+            </div>
+
         </div>
     );
 };

@@ -25,8 +25,8 @@ const AddDogForm = ({ onSubmit, onCancel }) => {
             <label>성별</label>
             <select value={gender} onChange={(e) => setGender(e.target.value)} required>
                 <option value="">선택하세요</option>
-                <option value="male">남성</option>
-                <option value="female">여성</option>
+                <option value="male">male</option>
+                <option value="female">female</option>
             </select>
 
             <label>품종</label>
